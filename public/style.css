@@ -1,0 +1,22 @@
+body {
+  margin: 0;
+  background: #000;
+  overflow: hidden;
+  font-family: sans-serif;
+  color: white;
+  text-align: center;
+}
+canvas {
+  display: block;
+  margin: 0 auto;
+  background-color: #000;
+}
+#menu {
+  position: absolute;
+  top: 20px;
+  width: 100%;
+}
+#menu input, #menu button {
+  padding: 10px;
+  font-size: 16px;
+}
