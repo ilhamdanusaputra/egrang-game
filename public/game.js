@@ -1,16 +1,18 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const socket = io();
+
 let playerId = null;
 let players = {};
 let assets = {};
 let name = "";
 
 const TILE_SIZE = 50;
-const WORLD_WIDTH = 2000;
-const WORLD_HEIGHT = 400;
+const CAMERA_THRESHOLD = 250;
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 800;
 
-const loadImage = (key, src) => {
+function loadImage(key, src) {
   return new Promise((resolve) => {
     const img = new Image();
     img.src = src;
@@ -19,9 +21,9 @@ const loadImage = (key, src) => {
       resolve();
     };
   });
-};
+}
 
-const initAssets = async () => {
+async function loadAssets() {
   await Promise.all([
     loadImage("marioUp", "assets/marioUp.png"),
     loadImage("marioDown", "assets/marioDown.png"),
@@ -29,13 +31,14 @@ const initAssets = async () => {
     loadImage("block", "assets/block.png"),
     loadImage("background", "assets/background.png"),
   ]);
-};
+}
 
 document.getElementById("startBtn").onclick = async () => {
   name = document.getElementById("nameInput").value || "Player";
   localStorage.setItem("playerName", name);
   document.getElementById("menu").style.display = "none";
-  await initAssets();
+
+  await loadAssets();
   socket.emit("join", { name });
   animate();
 };
@@ -53,27 +56,30 @@ document.addEventListener("keydown", (e) => {
   socket.emit("keydown", e.key);
 });
 
-function drawPlayer(player, yOffset) {
-  const img = player.index === 0 ? assets.marioUp : assets.marioDown;
-  ctx.drawImage(img, player.x - player.cameraX, yOffset + player.y, 50, 50);
-  ctx.fillStyle = "white";
-  ctx.fillText(player.name, player.x - player.cameraX, yOffset + player.y - 10);
-}
-
-function drawBackground(yOffset, cameraX) {
+function drawBackground(cameraX, yOffset) {
   const bg = assets.background;
-  for (let x = -cameraX % bg.width; x < canvas.width; x += bg.width) {
+  for (let x = -cameraX % bg.width; x < CANVAS_WIDTH; x += bg.width) {
     ctx.drawImage(bg, x, yOffset, bg.width, 400);
   }
 }
 
+function drawPlayer(p, yOffset) {
+  const img = p.index === 0 ? assets.marioUp : assets.marioDown;
+  const screenX = p.x - p.cameraX;
+  ctx.drawImage(img, screenX, yOffset + p.y, 50, 50);
+  ctx.fillStyle = "white";
+  ctx.fillText(p.name, screenX, yOffset + p.y - 10);
+}
+
 function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
   for (let id in players) {
     const p = players[id];
-    const screenY = p.index === 0 ? 0 : 400;
-    drawBackground(screenY, p.cameraX);
-    drawPlayer(p, screenY);
+    const offsetY = p.index === 0 ? 0 : 400;
+    drawBackground(p.cameraX, offsetY);
+    drawPlayer(p, offsetY);
   }
+
   requestAnimationFrame(animate);
 }

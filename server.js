@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -11,7 +12,7 @@ let players = {};
 let playerCount = 0;
 
 io.on("connection", (socket) => {
-  console.log("User connected", socket.id);
+  console.log("User connected:", socket.id);
 
   socket.on("join", ({ name }) => {
     const index = playerCount % 2;
@@ -30,11 +31,30 @@ io.on("connection", (socket) => {
   });
 
   socket.on("keydown", (key) => {
-    const player = players[socket.id];
-    if (!player) return;
-    if (key === "ArrowRight") player.x += 10;
-    if (key === "ArrowLeft") player.x -= 10;
-    player.cameraX = player.x - 100;
+    const p = players[socket.id];
+    if (!p) return;
+
+    const speed = 10;
+    const screenThreshold = 250;
+
+    if (key === "ArrowRight") {
+      p.x += speed;
+    }
+    if (key === "ArrowLeft") {
+      p.x -= speed;
+      if (p.x < 0) p.x = 0;
+    }
+
+    const screenX = p.x - p.cameraX;
+
+    if (screenX > screenThreshold) {
+      p.cameraX = p.x - screenThreshold;
+    } else if (screenX < 100) {
+      p.cameraX = p.x - 100;
+    }
+
+    if (p.cameraX < 0) p.cameraX = 0;
+
     io.emit("update", { players });
   });
 
@@ -46,5 +66,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+  console.log("Server running at http://localhost:3000");
 });
