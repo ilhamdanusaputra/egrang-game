@@ -3,39 +3,49 @@ const ctx = canvas.getContext("2d");
 const socket = io();
 const boostBtn = document.getElementById("boostBtn");
 
-// Kiri
+// ================== Kontrol Kiri ==================
 leftBtn.addEventListener("mousedown", () => {
+  leftPressed = true;
   socket.emit("keydown", "ArrowLeft");
 });
 leftBtn.addEventListener("touchstart", (e) => {
   e.preventDefault();
+  leftPressed = true;
   socket.emit("keydown", "ArrowLeft");
 });
 
 leftBtn.addEventListener("mouseup", () => {
+  leftPressed = false;
   socket.emit("keyup", "ArrowLeft");
 });
 leftBtn.addEventListener("touchend", (e) => {
   e.preventDefault();
+  leftPressed = false;
   socket.emit("keyup", "ArrowLeft");
 });
 
-// Kanan
+// ================== Kontrol Kanan ==================
+
 rightBtn.addEventListener("mousedown", () => {
+  rightPressed = true;
   socket.emit("keydown", "ArrowRight");
 });
 rightBtn.addEventListener("touchstart", (e) => {
   e.preventDefault();
+  rightPressed = true;
   socket.emit("keydown", "ArrowRight");
 });
 
 rightBtn.addEventListener("mouseup", () => {
+  rightPressed = false;
   socket.emit("keyup", "ArrowRight");
 });
 rightBtn.addEventListener("touchend", (e) => {
   e.preventDefault();
+  rightPressed = false;
   socket.emit("keyup", "ArrowRight");
 });
+
 
 // ================== Lompat ==================
 const jumpBtn = document.getElementById("jumpBtn");
@@ -113,7 +123,7 @@ async function loadAssets() {
     loadImage("c3", "assets/c3.png"),
     loadImage("c4", "assets/c4.png"),
     loadImage("coin", "assets/coin.png"),
-    loadImage("block", "assets/block.png"),
+    loadImage("bata", "assets/bata.png"),
     loadImage("background", "assets/background.png"),
     loadImage("nyawa", "assets/nyawa.png"),
     loadImage("stage1", "assets/stage1.png"),
@@ -124,6 +134,8 @@ async function loadAssets() {
     loadImage("boost50", "assets/boost50.png"),
     loadImage("boost75", "assets/boost75.png"),
     loadImage("boost100", "assets/boost100.png"),
+    loadImage("menang", "assets/menang.png"),
+    loadImage("kalah", "assets/kalah.png"),
   ]);
 }
 
@@ -172,12 +184,55 @@ function drawBackground(cameraX, yOffset) {
   }
 }
 
+let animCounter = 0; // hitungan frame global
+
+let leftPressed = false;
+let rightPressed = false;
+
+// Deteksi input
+document.addEventListener("keydown", (e) => {
+  if (e.code === "ArrowLeft") leftPressed = true;
+  if (e.code === "ArrowRight") rightPressed = true;
+});
+document.addEventListener("keyup", (e) => {
+  if (e.code === "ArrowLeft") leftPressed = false;
+  if (e.code === "ArrowRight") rightPressed = false;
+});
+
+// Animasi player
 function drawPlayer(p, yOffset) {
-  const img = p.index === 0 ? assets.marioUp : assets.marioDown;
+  let img;
+  const moving = (p.id === playerId) ? (leftPressed || rightPressed) : p.isMoving;
+  const facingLeft = (p.id === playerId) ? leftPressed : p.isFacingLeft; // kalau server kirim facingLeft bisa dipakai juga
+
+  if (moving) {
+    const frame = Math.floor(animCounter / 8) % 4;
+    img = assets[`c${frame + 1}`];
+  } else {
+    img = assets.c1;
+  }
+
+  const width = 50 * SCALE;
+  const height = width * (2 / 1);
+
   const screenX = (p.x - p.cameraX) * SCALE;
   const screenY = yOffset + (p.y * SCALE);
-  ctx.drawImage(img, screenX, screenY, 50 * SCALE, 50 * SCALE);
+
+  ctx.save();
+
+  if (facingLeft) {
+    // Mirror horizontal
+    ctx.translate(screenX + width / 2, screenY + height / 2);
+    ctx.scale(-1, 1);
+    ctx.translate(-width / 2, -height / 2);
+    ctx.drawImage(img, 0, 0, width, height);
+  } else {
+    ctx.drawImage(img, screenX, screenY, width, height);
+  }
+
+  ctx.restore();
 }
+
 
 function drawLives(p, yOffset) {
   const nyawaImg = assets.nyawa;
@@ -245,7 +300,6 @@ function drawPlayerName(p, yOffset) {
 
 function animate() {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
   for (let id in players) {
     const p = players[id];
     const offsetY = p.index === 0 ? 0 : CANVAS_HEIGHT / 2;
@@ -268,6 +322,7 @@ function animate() {
   if (players[playerId]) {
     drawBoost(players[playerId]);
   }
+  animCounter++;
 
   requestAnimationFrame(animate);
 }
