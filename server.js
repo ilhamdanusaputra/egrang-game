@@ -30,6 +30,7 @@ io.on("connection", (socket) => {
       index,
       cameraX: 0,
       isOnGround: true,
+      isSprinting: false,
     };
     playerCount++;
     socket.emit("init", { id: socket.id, players });
@@ -40,11 +41,20 @@ io.on("connection", (socket) => {
     const p = players[socket.id];
     if (!p) return;
 
-    if (key === "ArrowRight") p.vx = 3;
-    if (key === "ArrowLeft") p.vx = -3;
+    // Jalan normal
+    if (key === "ArrowRight") p.vx = p.isSprinting ? 6 : 3;
+    if (key === "ArrowLeft") p.vx = p.isSprinting ? -6 : -3;
 
-    // Lompat
-    if (key === " " && p.isOnGround) {
+    // Sprint aktif
+    if (key === " ") {
+      p.isSprinting = true;
+      // Update kecepatan kalau sedang bergerak
+      if (p.vx > 0) p.vx = 6;
+      if (p.vx < 0) p.vx = -6;
+    }
+
+    // Lompat (ArrowUp)
+    if (key === "ArrowUp" && p.isOnGround) {
       p.vy = JUMP_FORCE;
       p.isOnGround = false;
     }
@@ -54,8 +64,15 @@ io.on("connection", (socket) => {
     const p = players[socket.id];
     if (!p) return;
 
-    if (key === "ArrowRight" && p.vx > 0) p.vx = 0;
-    if (key === "ArrowLeft" && p.vx < 0) p.vx = 0;
+    if (key === "ArrowRight") p.vx = 0;
+    if (key === "ArrowLeft") p.vx = 0;
+
+    if (key === " ") {
+      p.isSprinting = false;
+      // Kembalikan kecepatan normal jika tetap menekan arah
+      if (p.vx > 0) p.vx = 3;
+      if (p.vx < 0) p.vx = -3;
+    }
   });
 
   socket.on("disconnect", () => {
@@ -90,6 +107,9 @@ setInterval(() => {
       p.y = GROUND_Y;
       p.vy = 0;
       p.isOnGround = true;
+      // Kembalikan kecepatan normal jika tidak menekan arah
+      if (p.vx > 3) p.vx = 3;
+      if (p.vx < -3) p.vx = -3;
     }
 
     // Kamera
