@@ -81,7 +81,6 @@ let name = "";
 const BASE_WIDTH = 800;
 const BASE_HEIGHT_HALF = 400; // setengah layar
 const TILE_SIZE = 50;
-const CAMERA_THRESHOLD = 250;
 
 let CANVAS_WIDTH = window.innerWidth;
 let CANVAS_HEIGHT = window.innerHeight;
@@ -138,6 +137,7 @@ async function loadAssets() {
 }
 
 const controls = ["boostBtn", "jumpBtn", "leftBtn", "rightBtn", "boostImg"];
+
 controls.forEach(id => {
   document.getElementById(id).style.display = "none";
 });
@@ -174,20 +174,20 @@ document.addEventListener("keyup", (e) => {
   socket.emit("keyup", e.key);
 });
 
-function drawBackground(cameraX, yOffset) {
-  const bg = assets.background;
-  const scaledHeight = BASE_HEIGHT_HALF * SCALE;
-  const scaledWidth = bg.width * SCALE;
-  for (let x = (-cameraX * SCALE) % scaledWidth; x < CANVAS_WIDTH; x += scaledWidth) {
-    ctx.drawImage(bg, x, yOffset, scaledWidth, scaledHeight);
-  }
-}
+// contoh simple lerp buat smooth camera
+const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
 
 function drawBackground(cameraX, yOffset) {
   const bg = assets.background;
   const scaledHeight = BASE_HEIGHT_HALF * SCALE;
   const scaledWidth = bg.width * SCALE;
-  for (let x = (-cameraX * SCALE) % scaledWidth; x < CANVAS_WIDTH; x += scaledWidth) {
+
+  // buat smoothCameraX agar gak langsung loncat
+  if (!drawBackground.smoothCameraX) drawBackground.smoothCameraX = cameraX;
+
+  drawBackground.smoothCameraX = lerp(drawBackground.smoothCameraX, cameraX, 0.1);
+
+  for (let x = (-drawBackground.smoothCameraX * SCALE) % scaledWidth; x < CANVAS_WIDTH; x += scaledWidth) {
     ctx.drawImage(bg, x, yOffset, scaledWidth, scaledHeight);
   }
 }
@@ -336,12 +336,19 @@ function animate() {
     if (currentPlayer.hasWon) {
       if (assets.menang) {
         drawCenteredImage(assets.menang);
+        controls.forEach(id => {
+          document.getElementById(id).style.display = "none";
+        });
+
       }
       return; // berhenti animasi lain
     }
     if (currentPlayer.hasLost) {
       if (assets.kalah) {
         drawCenteredImage(assets.kalah);
+        controls.forEach(id => {
+          document.getElementById(id).style.display = "none";
+        });
       }
       return; // berhenti animasi lain
     }
@@ -375,22 +382,13 @@ function animate() {
     return;
   }
 
-  // Render game normal kalau belum menang/kalah
+  // Render game normal
   for (let id in players) {
     const p = players[id];
-    const offsetY = p.index === 0 ? 0 : CANVAS_HEIGHT / 2;
 
-    drawBackground(p.cameraX, offsetY);
-    drawPlayerName(p, offsetY);
-    drawLives(p, offsetY);
-    drawStage(p, offsetY);
-    drawPlayer(p, offsetY);
-  }
-
-  // Render normal
-  for (let id in players) {
-    const p = players[id];
-    const offsetY = p.index === 0 ? 0 : CANVAS_HEIGHT / 2;
+    // Jika player ini adalah kita, maka offsetY = 0 (atas)
+    // Jika player ini lawan, offsetY = setengah layar (bawah)
+    const offsetY = (id === playerId) ? 0 : CANVAS_HEIGHT / 2;
 
     drawBackground(p.cameraX, offsetY);
     drawPlayerName(p, offsetY);
@@ -408,7 +406,6 @@ function animate() {
 
   // Boost bar khusus pemain sendiri
   if (players[playerId]) {
-    // drawBoost(players[playerId]);
     updateBoostImage(players[playerId]);
   }
 

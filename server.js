@@ -23,6 +23,9 @@ const BOOST_RECHARGE_MS = 7000; // recharge to full in 1 detik (ms)
 const BOOST_SPEED = 6;
 const NORMAL_SPEED = 3;
 
+const STAGE_DISTANCE = 500;
+const MAX_STAGE = 3;
+
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
@@ -66,22 +69,25 @@ io.on("connection", (socket) => {
 
     if (key === "ArrowRight") {
       p.vx = p.isSprinting ? BOOST_SPEED : NORMAL_SPEED;
+      p.isMoving = true;
+      p.isFacingLeft = false;
     }
     if (key === "ArrowLeft") {
       p.vx = p.isSprinting ? -BOOST_SPEED : -NORMAL_SPEED;
+      p.isMoving = true;
+      p.isFacingLeft = true;
     }
 
     if (key === " ") {
-      // Hanya mulai mengkonsumsi boost kalau masih ada sisa
       if (p.boostRemaining > 0 && !p.isHoldingSpace) {
         p.isHoldingSpace = true;
         p.isSprinting = true;
-        p.recharging = false; // hentikan recharge kalau ada
-        // sesuaikan kecepatan saat sudah bergerak
+        p.recharging = false;
         if (p.vx > 0) p.vx = BOOST_SPEED;
         if (p.vx < 0) p.vx = -BOOST_SPEED;
+        // juga update isMoving supaya animasi tetap jalan saat sprint
+        if (p.vx !== 0) p.isMoving = true;
       }
-      // kalau boostRemaining == 0 -> spasi tidak berpengaruh
     }
 
     if (key === "ArrowUp" && p.isOnGround) {
@@ -94,17 +100,17 @@ io.on("connection", (socket) => {
     const p = players[socket.id];
     if (!p) return;
 
-    if (key === "ArrowRight" || key === "ArrowLeft") p.vx = 0;
+    if (key === "ArrowRight" || key === "ArrowLeft") {
+      p.vx = 0;
+      p.isMoving = false;
+    }
 
     if (key === " ") {
-      // Lepas spasi -> stop holding dan mulai recharge (jika belum penuh)
       if (p.isHoldingSpace) p.isHoldingSpace = false;
-      // hentikan sprint visual
       p.isSprinting = false;
       if (p.vx > 0) p.vx = NORMAL_SPEED;
       if (p.vx < 0) p.vx = -NORMAL_SPEED;
 
-      // Mulai recharge hanya jika belum penuh
       if (p.boostRemaining < BOOST_MAX_MS) {
         p.recharging = true;
         p.rechargeStartTime = Date.now();
@@ -135,13 +141,12 @@ io.on("connection", (socket) => {
   });
 });
 
-const STAGE_DISTANCE = 500;
-const MAX_STAGE = 3;
-
 // Game loop 60 FPS
 const TICK_MS = 1000 / 60;
 setInterval(() => {
-  const screenThreshold = 250;
+  const screenThreshold = 800;  // threshold fixed 800 px
+  const screenLowerBound = 200; // optional, batas bawah supaya kamera gak maju mundur terlalu jauh
+
   const now = Date.now();
 
   for (let id in players) {
@@ -204,14 +209,22 @@ setInterval(() => {
             io.emit("playerLost", { id: otherId, name: players[otherId].name });
           }
         }
+
+        // Reset game state setelah 3 detik (contoh delay biar pemain lihat hasil)
+        setTimeout(() => {
+          resetGame();
+          io.emit("update", { players });
+        }, 3000);
+
+        break; // jangan lanjut looping pemain lain
       }
     }
+
     // Cek kalah (lives <= 1)
     if (p.lives <= 1 && !p.hasLost) {
       p.hasLost = true;
       console.log(`${p.name} kalah!`);
       io.emit("playerLost", { id: p.id, name: p.name });
-
 
       // Tandai pemain lain menang
       for (let otherId in players) {
@@ -221,6 +234,12 @@ setInterval(() => {
           io.emit("playerWon", { id: otherId, name: players[otherId].name });
         }
       }
+
+      // Reset game state setelah delay
+      setTimeout(() => {
+        resetGame();
+        io.emit("update", { players });
+      }, 3000);
     }
 
     // Update posisi horizontal
@@ -247,14 +266,22 @@ setInterval(() => {
     const screenX = p.x - p.cameraX;
     if (screenX > screenThreshold) {
       p.cameraX = p.x - screenThreshold;
-    } else if (screenX < 100) {
-      p.cameraX = p.x - 100;
+    } else if (screenX < screenLowerBound) {
+      p.cameraX = p.x - screenLowerBound;
     }
     if (p.cameraX < 0) p.cameraX = 0;
   }
 
   io.emit("update", { players });
 }, TICK_MS);
+
+// Tambahkan fungsi reset game
+function resetGame() {
+  // Kosongkan semua slot dan players
+  players = {};
+  slots = [null, null];
+  console.log("Game state sudah di-reset.");
+}
 
 server.listen(3000, () => {
   console.log("Server running at http://localhost:3000");
