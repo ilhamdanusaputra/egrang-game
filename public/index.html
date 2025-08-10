@@ -29,7 +29,6 @@
   z-index: 999;
 ">
   </button>
-
   <!-- Tombol lompat -->
   <button id="jumpBtn" style="
   position: fixed;
@@ -43,7 +42,6 @@
   cursor: pointer;
   z-index: 999;
 "></button>
-
   <!-- Tombol kiri -->
   <button id="leftBtn" style="
   position: fixed;
@@ -57,7 +55,6 @@
   cursor: pointer;
   z-index: 999;
 "></button>
-
   <!-- Tombol kanan -->
   <button id="rightBtn" style="
   position: fixed;
@@ -71,6 +68,17 @@
   cursor: pointer;
   z-index: 999;
 "></button>
+  <!-- Tombol boost -->
+  <img id="boostImg" src="assets/boost0.png" style="
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  height: 60px;
+  width: 54px; /* 60 * 9/10 */
+  z-index: 1000;
+  user-select: none;
+  pointer-events: none;
+" />
   <canvas id="gameCanvas" width="800" height="800"></canvas>
   <script src="/socket.io/socket.io.js"></script>
   <script src="game.js"></script>

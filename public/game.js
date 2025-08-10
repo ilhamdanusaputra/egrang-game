@@ -255,7 +255,28 @@ function drawStage(p, yOffset) {
   ctx.drawImage(stageImg, x, y, width, height);
 }
 
-function drawBoost(p) {
+// function drawBoost(p) {
+//   const percent = p.boostPercent || 0;
+//   let imgKey = "boost0";
+//   if (percent > 75) imgKey = "boost100";
+//   else if (percent > 50) imgKey = "boost75";
+//   else if (percent > 25) imgKey = "boost50";
+//   else if (percent > 0) imgKey = "boost25";
+
+//   const img = assets[imgKey];
+//   const height = 60 * SCALE;
+//   const width = height * (9 / 10);
+//   const padding = 18 * SCALE;
+
+//   // 📌 Posisikan di pojok kanan bawah layar
+//   const x = CANVAS_WIDTH - width - padding;
+//   const y = CANVAS_HEIGHT - height - padding;
+
+//   ctx.drawImage(img, x, y, width, height);
+// }
+
+function updateBoostImage(p) {
+  if (!p) return;
   const percent = p.boostPercent || 0;
   let imgKey = "boost0";
   if (percent > 75) imgKey = "boost100";
@@ -263,16 +284,8 @@ function drawBoost(p) {
   else if (percent > 25) imgKey = "boost50";
   else if (percent > 0) imgKey = "boost25";
 
-  const img = assets[imgKey];
-  const height = 60 * SCALE;
-  const width = height * (9 / 10);
-  const padding = 18 * SCALE;
-
-  // 📌 Posisikan di pojok kanan bawah layar
-  const x = CANVAS_WIDTH - width - padding;
-  const y = CANVAS_HEIGHT - height - padding;
-
-  ctx.drawImage(img, x, y, width, height);
+  const boostImg = document.getElementById("boostImg");
+  boostImg.src = `assets/${imgKey}.png`;
 }
 
 function drawPlayerName(p, yOffset) {
@@ -385,7 +398,8 @@ function animate() {
 
   // Boost bar khusus pemain sendiri
   if (players[playerId]) {
-    drawBoost(players[playerId]);
+    // drawBoost(players[playerId]);
+    updateBoostImage(players[playerId]);
   }
 
   animCounter++;
