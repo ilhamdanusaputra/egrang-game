@@ -151,16 +151,13 @@ function drawBoost(p, yOffset) {
   const width = height * (9 / 10); // rasio 9:10
   const padding = 8 * SCALE;
 
+  // Posisi dari kanan bawah layar split
   const x = CANVAS_WIDTH - width - padding;
-  const y = yOffset
-    + (5 * SCALE)              // offset nyawa
-    + (25 * SCALE)             // tinggi nyawa
-    + padding
-    + (25 * SCALE)             // tinggi stage
-    + padding;                 // jarak bawah stage
+  const y = yOffset + BASE_HEIGHT_HALF - height - padding;
 
   ctx.drawImage(img, x, y, width, height);
 }
+
 function drawPlayerName(p, yOffset) {
   const text = p.name;
   ctx.font = `${20 * SCALE}px Arial`;
