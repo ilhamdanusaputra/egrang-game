@@ -9,6 +9,7 @@ const io = new Server(server);
 app.use(express.static("public"));
 
 let players = {};
+let slots = [null, null]; // slot[0] = player atas, slot[1] = player bawah
 let playerCount = 0;
 
 const GRAVITY = 1;       // Tarikan ke bawah
@@ -19,7 +20,10 @@ io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
   socket.on("join", ({ name }) => {
-    const index = playerCount % 2;
+    // Cari slot kosong
+    let index = slots.findIndex(s => s === null);
+    if (index === -1) index = 0; // fallback kalau penuh
+
     players[socket.id] = {
       id: socket.id,
       name,
@@ -32,7 +36,8 @@ io.on("connection", (socket) => {
       isOnGround: true,
       isSprinting: false,
     };
-    playerCount++;
+    slots[index] = socket.id;
+
     socket.emit("init", { id: socket.id, players });
     io.emit("update", { players });
   });
@@ -41,19 +46,15 @@ io.on("connection", (socket) => {
     const p = players[socket.id];
     if (!p) return;
 
-    // Jalan normal
     if (key === "ArrowRight") p.vx = p.isSprinting ? 6 : 3;
     if (key === "ArrowLeft") p.vx = p.isSprinting ? -6 : -3;
 
-    // Sprint aktif
     if (key === " ") {
       p.isSprinting = true;
-      // Update kecepatan kalau sedang bergerak
       if (p.vx > 0) p.vx = 6;
       if (p.vx < 0) p.vx = -6;
     }
 
-    // Lompat (ArrowUp)
     if (key === "ArrowUp" && p.isOnGround) {
       p.vy = JUMP_FORCE;
       p.isOnGround = false;
@@ -64,26 +65,34 @@ io.on("connection", (socket) => {
     const p = players[socket.id];
     if (!p) return;
 
-    if (key === "ArrowRight") p.vx = 0;
-    if (key === "ArrowLeft") p.vx = 0;
+    if (key === "ArrowRight" || key === "ArrowLeft") p.vx = 0;
 
     if (key === " ") {
       p.isSprinting = false;
-      // Kembalikan kecepatan normal jika tetap menekan arah
       if (p.vx > 0) p.vx = 3;
       if (p.vx < 0) p.vx = -3;
     }
   });
 
   socket.on("disconnect", () => {
-    delete players[socket.id];
-    playerCount--;
-    if (Object.keys(players).length === 0) {
-      console.log("Tidak ada player, memutus semua socket...");
-      io.sockets.sockets.forEach((s) => s.disconnect(true));
-    } else {
-      io.emit("update", { players });
+    const p = players[socket.id];
+    if (p) {
+      slots[p.index] = null; // kosongkan slot
+      delete players[socket.id];
     }
+
+    // Remap index pemain yang tersisa biar tidak nyangkut
+    let i = 0;
+    for (let id in players) {
+      players[id].index = i;
+      slots[i] = id;
+      i++;
+    }
+    for (; i < slots.length; i++) {
+      slots[i] = null;
+    }
+
+    io.emit("update", { players });
   });
 });
 

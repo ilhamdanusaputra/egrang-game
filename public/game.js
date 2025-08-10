@@ -28,7 +28,9 @@ function resizeCanvas() {
   const scaleY = (CANVAS_HEIGHT / 2) / BASE_HEIGHT_HALF;
   SCALE = Math.min(scaleX, scaleY);
 }
+
 resizeCanvas();
+
 window.addEventListener("resize", resizeCanvas);
 
 function loadImage(key, src) {
@@ -88,14 +90,41 @@ function drawBackground(cameraX, yOffset) {
   }
 }
 
+function drawBackground(cameraX, yOffset) {
+  const bg = assets.background;
+  const scaledHeight = BASE_HEIGHT_HALF * SCALE;
+  const scaledWidth = bg.width * SCALE;
+  for (let x = (-cameraX * SCALE) % scaledWidth; x < CANVAS_WIDTH; x += scaledWidth) {
+    ctx.drawImage(bg, x, yOffset, scaledWidth, scaledHeight);
+  }
+}
+
 function drawPlayer(p, yOffset) {
   const img = p.index === 0 ? assets.marioUp : assets.marioDown;
   const screenX = (p.x - p.cameraX) * SCALE;
   const screenY = yOffset + (p.y * SCALE);
   ctx.drawImage(img, screenX, screenY, 50 * SCALE, 50 * SCALE);
+}
+
+function drawPlayerName(p, yOffset) {
+  const text = p.name;
+  ctx.font = `${20 * SCALE}px Arial`;
+  ctx.textAlign = "left";
+
+  // Hitung ukuran kotak background
+  const paddingX = 8 * SCALE;
+  const paddingY = 5 * SCALE;
+  const textWidth = ctx.measureText(text).width;
+  const boxWidth = textWidth + paddingX * 2;
+  const boxHeight = 24 * SCALE;
+
+  // Gambar kotak semi-transparan
+  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+  ctx.fillRect(10, yOffset + 10, boxWidth, boxHeight);
+
+  // Gambar teks di atas kotak
   ctx.fillStyle = "white";
-  ctx.font = `${14 * SCALE}px Arial`;
-  ctx.fillText(p.name, screenX, screenY - 10 * SCALE);
+  ctx.fillText(text, 10 + paddingX, yOffset + 28 * SCALE);
 }
 
 function animate() {
@@ -104,7 +133,9 @@ function animate() {
   for (let id in players) {
     const p = players[id];
     const offsetY = p.index === 0 ? 0 : CANVAS_HEIGHT / 2;
+
     drawBackground(p.cameraX, offsetY);
+    drawPlayerName(p, offsetY);
     drawPlayer(p, offsetY);
   }
 
@@ -117,3 +148,5 @@ function animate() {
 
   requestAnimationFrame(animate);
 }
+
+
