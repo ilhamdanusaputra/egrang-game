@@ -1,18 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Multiplayer Mario</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <div id="menu">
     <input type="text" id="nameInput" placeholder="Enter your name" />
     <button id="startBtn">Start Game</button>
   </div>
+  <button id="boostBtn" style="
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: rgba(255,0,0,0); /* transparan penuh */
+  /* background-color: rgba(255,0,0,0.2); */
+  color: transparent; /* teks juga transparan */
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  z-index: 999;
+">
+  </button>
+
+  <!-- Tombol lompat -->
+  <button id="jumpBtn" style="
+  position: fixed;
+  bottom: 20px;
+  right: 90px;
+  width: 60px;
+  height: 60px;
+  border: none;
+  background: url('assets/lompat.png') no-repeat center/cover;
+  background-color: transparent;
+  cursor: pointer;
+  z-index: 999;
+"></button>
+
+  <!-- Tombol kiri -->
+  <button id="leftBtn" style="
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 60px;
+  height: 60px;
+  border: none;
+  background: url('assets/kiri.png') no-repeat center/cover;
+  background-color: transparent;
+  cursor: pointer;
+  z-index: 999;
+"></button>
+
+  <!-- Tombol kanan -->
+  <button id="rightBtn" style="
+  position: fixed;
+  bottom: 20px;
+  left: 100px; /* geser dari tombol kiri */
+  width: 60px;
+  height: 60px;
+  border: none;
+  background: url('assets/kanan.png') no-repeat center/cover;
+  background-color: transparent;
+  cursor: pointer;
+  z-index: 999;
+"></button>
   <canvas id="gameCanvas" width="800" height="800"></canvas>
   <script src="/socket.io/socket.io.js"></script>
   <script src="game.js"></script>
 </body>
+
 </html>

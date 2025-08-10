@@ -1,6 +1,66 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const socket = io();
+const boostBtn = document.getElementById("boostBtn");
+
+// Kiri
+leftBtn.addEventListener("mousedown", () => {
+  socket.emit("keydown", "ArrowLeft");
+});
+leftBtn.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  socket.emit("keydown", "ArrowLeft");
+});
+
+leftBtn.addEventListener("mouseup", () => {
+  socket.emit("keyup", "ArrowLeft");
+});
+leftBtn.addEventListener("touchend", (e) => {
+  e.preventDefault();
+  socket.emit("keyup", "ArrowLeft");
+});
+
+// Kanan
+rightBtn.addEventListener("mousedown", () => {
+  socket.emit("keydown", "ArrowRight");
+});
+rightBtn.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  socket.emit("keydown", "ArrowRight");
+});
+
+rightBtn.addEventListener("mouseup", () => {
+  socket.emit("keyup", "ArrowRight");
+});
+rightBtn.addEventListener("touchend", (e) => {
+  e.preventDefault();
+  socket.emit("keyup", "ArrowRight");
+});
+
+// ================== Lompat ==================
+const jumpBtn = document.getElementById("jumpBtn");
+jumpBtn.addEventListener("mousedown", () => socket.emit("keydown", "ArrowUp"));
+jumpBtn.addEventListener("touchstart", e => { e.preventDefault(); socket.emit("keydown", "ArrowUp"); });
+jumpBtn.addEventListener("mouseup", () => socket.emit("keyup", "ArrowUp"));
+jumpBtn.addEventListener("touchend", e => { e.preventDefault(); socket.emit("keyup", "ArrowUp"); });
+
+// Tekan / tahan
+boostBtn.addEventListener("mousedown", () => {
+  socket.emit("keydown", " ");
+});
+boostBtn.addEventListener("touchstart", (e) => {
+  e.preventDefault(); // cegah scroll di HP
+  socket.emit("keydown", " ");
+});
+
+// Lepas
+boostBtn.addEventListener("mouseup", () => {
+  socket.emit("keyup", " ");
+});
+boostBtn.addEventListener("touchend", (e) => {
+  e.preventDefault();
+  socket.emit("keyup", " ");
+});
 
 let playerId = null;
 let players = {};
@@ -48,6 +108,10 @@ async function loadAssets() {
   await Promise.all([
     loadImage("marioUp", "assets/marioUp.png"),
     loadImage("marioDown", "assets/marioDown.png"),
+    loadImage("c1", "assets/c1.png"),
+    loadImage("c2", "assets/c2.png"),
+    loadImage("c3", "assets/c3.png"),
+    loadImage("c4", "assets/c4.png"),
     loadImage("coin", "assets/coin.png"),
     loadImage("block", "assets/block.png"),
     loadImage("background", "assets/background.png"),
@@ -138,7 +202,7 @@ function drawStage(p, yOffset) {
   ctx.drawImage(stageImg, x, y, width, height);
 }
 
-function drawBoost(p, yOffset) {
+function drawBoost(p) {
   const percent = p.boostPercent || 0;
   let imgKey = "boost0";
   if (percent > 75) imgKey = "boost100";
@@ -147,13 +211,13 @@ function drawBoost(p, yOffset) {
   else if (percent > 0) imgKey = "boost25";
 
   const img = assets[imgKey];
-  const height = 20 * SCALE; // tinggi indikator
-  const width = height * (9 / 10); // rasio 9:10
-  const padding = 8 * SCALE;
+  const height = 50 * SCALE;
+  const width = height * (9 / 10);
+  const padding = 18 * SCALE;
 
-  // Posisi dari kanan bawah layar split
+  // 📌 Posisikan di pojok kanan bawah layar
   const x = CANVAS_WIDTH - width - padding;
-  const y = yOffset + BASE_HEIGHT_HALF - height - padding;
+  const y = CANVAS_HEIGHT - height - padding;
 
   ctx.drawImage(img, x, y, width, height);
 }
@@ -191,7 +255,6 @@ function animate() {
     drawLives(p, offsetY);
     drawStage(p, offsetY);
     drawPlayer(p, offsetY);
-    drawBoost(p, offsetY);
   }
 
   // Garis pemisah tengah
@@ -200,6 +263,11 @@ function animate() {
   ctx.moveTo(0, CANVAS_HEIGHT / 2);
   ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT / 2);
   ctx.stroke();
+
+  // ✅ Gambar boost di pojok kanan bawah hanya untuk pemain sendiri
+  if (players[playerId]) {
+    drawBoost(players[playerId]);
+  }
 
   requestAnimationFrame(animate);
 }
