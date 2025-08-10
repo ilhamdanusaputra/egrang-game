@@ -55,6 +55,11 @@ async function loadAssets() {
     loadImage("stage1", "assets/stage1.png"),
     loadImage("stage2", "assets/stage2.png"),
     loadImage("stage3", "assets/stage3.png"),
+    loadImage("boost0", "assets/boost0.png"),
+    loadImage("boost25", "assets/boost25.png"),
+    loadImage("boost50", "assets/boost50.png"),
+    loadImage("boost75", "assets/boost75.png"),
+    loadImage("boost100", "assets/boost100.png"),
   ]);
 }
 
@@ -133,6 +138,29 @@ function drawStage(p, yOffset) {
   ctx.drawImage(stageImg, x, y, width, height);
 }
 
+function drawBoost(p, yOffset) {
+  const percent = p.boostPercent || 0;
+  let imgKey = "boost0";
+  if (percent > 75) imgKey = "boost100";
+  else if (percent > 50) imgKey = "boost75";
+  else if (percent > 25) imgKey = "boost50";
+  else if (percent > 0) imgKey = "boost25";
+
+  const img = assets[imgKey];
+  const height = 20 * SCALE; // tinggi indikator
+  const width = height * (9 / 10); // rasio 9:10
+  const padding = 8 * SCALE;
+
+  const x = CANVAS_WIDTH - width - padding;
+  const y = yOffset
+    + (5 * SCALE)              // offset nyawa
+    + (25 * SCALE)             // tinggi nyawa
+    + padding
+    + (25 * SCALE)             // tinggi stage
+    + padding;                 // jarak bawah stage
+
+  ctx.drawImage(img, x, y, width, height);
+}
 function drawPlayerName(p, yOffset) {
   const text = p.name;
   ctx.font = `${20 * SCALE}px Arial`;
@@ -166,6 +194,7 @@ function animate() {
     drawLives(p, offsetY);
     drawStage(p, offsetY);
     drawPlayer(p, offsetY);
+    drawBoost(p, offsetY);
   }
 
   // Garis pemisah tengah
