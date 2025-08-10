@@ -42,7 +42,10 @@ io.on("connection", (socket) => {
       cameraX: 0,
       isOnGround: true,
       isSprinting: false,
-
+      lives: 5,         // misal default 5 nyawa
+      hasLost: false,
+      hasWon: false,
+      stage: 1,
       // Boost state
       boostRemaining: BOOST_MAX_MS, // ms
       boostPercent: 100,            // 0 - 100
@@ -132,6 +135,9 @@ io.on("connection", (socket) => {
   });
 });
 
+const STAGE_DISTANCE = 500;
+const MAX_STAGE = 3;
+
 // Game loop 60 FPS
 const TICK_MS = 1000 / 60;
 setInterval(() => {
@@ -172,6 +178,50 @@ setInterval(() => {
 
     // Update persen untuk dikirim ke client (integer)
     p.boostPercent = Math.round((p.boostRemaining / BOOST_MAX_MS) * 100);
+
+    // Cek stage berdasarkan jarak
+    const currentStage = Math.floor(p.x / STAGE_DISTANCE) + 1;
+    if (!p.stage) p.stage = 1;
+
+    if (currentStage > p.stage) {
+      p.stage = currentStage;
+    }
+
+    // Cek menang (stage melewati MAX_STAGE)
+    for (let id in players) {
+      const p = players[id];
+
+      if (p.stage > MAX_STAGE && !p.hasWon) {
+        p.hasWon = true;
+        console.log(`${p.name} menang!`);
+        io.emit("playerWon", { id: p.id, name: p.name });
+
+        // Tandai pemain lain kalah
+        for (let otherId in players) {
+          if (otherId !== id && !players[otherId].hasWon && !players[otherId].hasLost) {
+            players[otherId].hasLost = true;
+            console.log(`${players[otherId].name} kalah karena pemain lain menang`);
+            io.emit("playerLost", { id: otherId, name: players[otherId].name });
+          }
+        }
+      }
+    }
+    // Cek kalah (lives <= 1)
+    if (p.lives <= 1 && !p.hasLost) {
+      p.hasLost = true;
+      console.log(`${p.name} kalah!`);
+      io.emit("playerLost", { id: p.id, name: p.name });
+
+
+      // Tandai pemain lain menang
+      for (let otherId in players) {
+        if (otherId !== p.id && !players[otherId].hasLost && !players[otherId].hasWon) {
+          players[otherId].hasWon = true;
+          console.log(`${players[otherId].name} menang karena pemain lain kalah`);
+          io.emit("playerWon", { id: otherId, name: players[otherId].name });
+        }
+      }
+    }
 
     // Update posisi horizontal
     p.x += p.vx;

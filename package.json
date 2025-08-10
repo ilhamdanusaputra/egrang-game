@@ -1,5 +1,5 @@
 {
-  "name": "mario-multiplayer",
+  "name": "eggrang-multiplayer",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {

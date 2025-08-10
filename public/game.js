@@ -116,8 +116,6 @@ function loadImage(key, src) {
 
 async function loadAssets() {
   await Promise.all([
-    loadImage("marioUp", "assets/marioUp.png"),
-    loadImage("marioDown", "assets/marioDown.png"),
     loadImage("c1", "assets/c1.png"),
     loadImage("c2", "assets/c2.png"),
     loadImage("c3", "assets/c3.png"),
@@ -266,7 +264,7 @@ function drawBoost(p) {
   else if (percent > 0) imgKey = "boost25";
 
   const img = assets[imgKey];
-  const height = 50 * SCALE;
+  const height = 60 * SCALE;
   const width = height * (9 / 10);
   const padding = 18 * SCALE;
 
@@ -298,8 +296,63 @@ function drawPlayerName(p, yOffset) {
   ctx.fillText(text, 10 + paddingX, yOffset + 28 * SCALE);
 }
 
+function drawCenteredImage(img) {
+  const w = img.width * SCALE;
+  const h = img.height * SCALE;
+  const x = (CANVAS_WIDTH - w) / 2;
+  const y = (CANVAS_HEIGHT - h) / 2;
+  ctx.drawImage(img, x, y, w, h);
+}
+
 function animate() {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+  const currentPlayer = players[playerId];
+
+  if (currentPlayer) {
+    if (currentPlayer.hasWon) {
+      if (assets.menang) {
+        drawCenteredImage(assets.menang);
+      }
+      return; // berhenti animasi lain
+    }
+    if (currentPlayer.hasLost) {
+      if (assets.kalah) {
+        drawCenteredImage(assets.kalah);
+      }
+      return; // berhenti animasi lain
+    }
+  }
+
+  // Kalau belum menang/kalah, cek kondisi global (optional)
+  let someoneWon = false;
+  let someoneLost = false;
+
+  for (const id in players) {
+    if (players[id].hasWon) {
+      someoneWon = true;
+      break;
+    }
+  }
+  if (!someoneWon) {
+    for (const id in players) {
+      if (players[id].hasLost) {
+        someoneLost = true;
+        break;
+      }
+    }
+  }
+
+  if (someoneWon) {
+    if (assets.menang) drawCenteredImage(assets.menang);
+    return;
+  }
+  if (someoneLost) {
+    if (assets.kalah) drawCenteredImage(assets.kalah);
+    return;
+  }
+
+  // Render game normal kalau belum menang/kalah
   for (let id in players) {
     const p = players[id];
     const offsetY = p.index === 0 ? 0 : CANVAS_HEIGHT / 2;
@@ -311,20 +364,30 @@ function animate() {
     drawPlayer(p, offsetY);
   }
 
-  // Garis pemisah tengah
+  // Render normal
+  for (let id in players) {
+    const p = players[id];
+    const offsetY = p.index === 0 ? 0 : CANVAS_HEIGHT / 2;
+
+    drawBackground(p.cameraX, offsetY);
+    drawPlayerName(p, offsetY);
+    drawLives(p, offsetY);
+    drawStage(p, offsetY);
+    drawPlayer(p, offsetY);
+  }
+
+  // Garis pembatas tengah
   ctx.strokeStyle = "white";
   ctx.beginPath();
   ctx.moveTo(0, CANVAS_HEIGHT / 2);
   ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT / 2);
   ctx.stroke();
 
-  // ✅ Gambar boost di pojok kanan bawah hanya untuk pemain sendiri
+  // Boost bar khusus pemain sendiri
   if (players[playerId]) {
     drawBoost(players[playerId]);
   }
-  animCounter++;
 
+  animCounter++;
   requestAnimationFrame(animate);
 }
-
-
