@@ -137,10 +137,20 @@ async function loadAssets() {
   ]);
 }
 
+const controls = ["boostBtn", "jumpBtn", "leftBtn", "rightBtn", "boostImg"];
+controls.forEach(id => {
+  document.getElementById(id).style.display = "none";
+});
+
 document.getElementById("startBtn").onclick = async () => {
   name = document.getElementById("nameInput").value || "Player";
   localStorage.setItem("playerName", name);
   document.getElementById("menu").style.display = "none";
+
+  // Tampilkan semua tombol kontrol
+  controls.forEach(id => {
+    document.getElementById(id).style.display = "block";
+  });
 
   await loadAssets();
   socket.emit("join", { name });
