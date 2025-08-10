@@ -51,6 +51,10 @@ async function loadAssets() {
     loadImage("coin", "assets/coin.png"),
     loadImage("block", "assets/block.png"),
     loadImage("background", "assets/background.png"),
+    loadImage("nyawa", "assets/nyawa.png"),
+    loadImage("stage1", "assets/stage1.png"),
+    loadImage("stage2", "assets/stage2.png"),
+    loadImage("stage3", "assets/stage3.png"),
   ]);
 }
 
@@ -106,6 +110,29 @@ function drawPlayer(p, yOffset) {
   ctx.drawImage(img, screenX, screenY, 50 * SCALE, 50 * SCALE);
 }
 
+function drawLives(p, yOffset) {
+  const nyawaImg = assets.nyawa;
+  const lifeCount = p.lives || 5; // default 5 kalau belum ada data
+  const lifeSize = 20 * SCALE;
+  const padding = 8 * SCALE;
+
+  for (let i = 0; i < lifeCount; i++) {
+    const x = CANVAS_WIDTH - (lifeSize + padding) * (i + 1);
+    const y = yOffset + 10;
+    ctx.drawImage(nyawaImg, x, y, lifeSize, lifeSize);
+  }
+}
+
+function drawStage(p, yOffset) {
+  const stageImg = assets[`stage${p.stage || 1}`]; // default stage 1
+  const height = 20 * SCALE; // tinggi stage
+  const width = height * 6;  // lebar sesuai rasio 6:1
+  const padding = 8 * SCALE;
+  const x = CANVAS_WIDTH - width - padding;
+  const y = yOffset + (5 * SCALE) + (25 * SCALE) + padding; // di bawah nyawa
+  ctx.drawImage(stageImg, x, y, width, height);
+}
+
 function drawPlayerName(p, yOffset) {
   const text = p.name;
   ctx.font = `${20 * SCALE}px Arial`;
@@ -136,6 +163,8 @@ function animate() {
 
     drawBackground(p.cameraX, offsetY);
     drawPlayerName(p, offsetY);
+    drawLives(p, offsetY);
+    drawStage(p, offsetY);
     drawPlayer(p, offsetY);
   }
 
