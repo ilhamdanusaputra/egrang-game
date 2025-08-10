@@ -56,6 +56,10 @@ document.addEventListener("keydown", (e) => {
   socket.emit("keydown", e.key);
 });
 
+document.addEventListener("keyup", (e) => {
+  socket.emit("keyup", e.key);
+});
+
 function drawBackground(cameraX, yOffset) {
   const bg = assets.background;
   for (let x = -cameraX % bg.width; x < CANVAS_WIDTH; x += bg.width) {
