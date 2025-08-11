@@ -147,7 +147,23 @@ io.on("connection", (socket) => {
     if (p) {
       slots[p.index] = null; // kosongkan slot
       delete players[socket.id];
+      if (!p.hasLost) {
+        // Tandai pemain disconnect sebagai kalah
+        p.hasLost = true;
+        console.log(`${p.name} kalah karena disconnect`);
+        io.emit("playerLost", { id: p.id, name: p.name });
+
+        // Cari pemain lain yang belum kalah → menang
+        for (let otherId in players) {
+          if (otherId !== p.id && !players[otherId].hasLost && !players[otherId].hasWon) {
+            players[otherId].hasWon = true;
+            console.log(`${players[otherId].name} menang karena pemain lain disconnect`);
+            io.emit("playerWon", { id: otherId, name: players[otherId].name });
+          }
+        }
+      }
     }
+
 
     // Remap index pemain yang tersisa biar tidak nyangkut
     let i = 0;
