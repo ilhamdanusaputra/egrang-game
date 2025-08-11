@@ -189,7 +189,6 @@ const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
 function drawBackground(cameraX, yOffset) {
   const bg = assets.background;
   for (let x = -cameraX % bg.width; x < CANVAS_WIDTH; x += bg.width) {
-    ctx.drawImage(bg, x, yOffset, bg.width, 400);
     const scaledHeight = BASE_HEIGHT_HALF * SCALE;
     const scaledWidth = bg.width * SCALE;
     for (let x = (-cameraX * SCALE) % scaledWidth; x < CANVAS_WIDTH; x += scaledWidth) {

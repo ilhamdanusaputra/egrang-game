@@ -18,8 +18,8 @@ const JUMP_FORCE = -10;  // Kecepatan awal saat lompat
 const GROUND_Y = 300;    // Posisi tanah
 
 // BOOST
-const BOOST_MAX_MS = 5000;    // 10 detik total (ms)
-const BOOST_RECHARGE_MS = 7000; // recharge to full in 1 detik (ms)
+const BOOST_MAX_MS = 5000;    // 5 detik total (ms)
+const BOOST_RECHARGE_MS = 12000; // recharge to full in 12 detik (ms)
 const BOOST_SPEED = 6;
 const NORMAL_SPEED = 3;
 
