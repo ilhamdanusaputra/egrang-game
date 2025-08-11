@@ -133,6 +133,8 @@ async function loadAssets() {
     loadImage("boost100", "assets/boost100.png"),
     loadImage("menang", "assets/menang.png"),
     loadImage("kalah", "assets/kalah.png"),
+    loadImage("new_game", "assets/new_game.png"),
+    loadImage("exit", "assets/exit.png"),
   ]);
 }
 
@@ -162,8 +164,15 @@ socket.on("init", (data) => {
   players = data.players;
 });
 
+let obstacles = [];
+
+socket.on("initObstacles", (data) => {
+  obstacles = data;
+});
+
 socket.on("update", (data) => {
-  players = data.players;
+  players = data.players || players;
+  obstacles = data.obstacles || obstacles;
 });
 
 document.addEventListener("keydown", (e) => {
@@ -179,19 +188,31 @@ const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
 
 function drawBackground(cameraX, yOffset) {
   const bg = assets.background;
-  const scaledHeight = BASE_HEIGHT_HALF * SCALE;
-  const scaledWidth = bg.width * SCALE;
-
-  // buat smoothCameraX agar gak langsung loncat
-  if (!drawBackground.smoothCameraX) drawBackground.smoothCameraX = cameraX;
-
-  drawBackground.smoothCameraX = lerp(drawBackground.smoothCameraX, cameraX, 0.1);
-
-  for (let x = (-drawBackground.smoothCameraX * SCALE) % scaledWidth; x < CANVAS_WIDTH; x += scaledWidth) {
-    ctx.drawImage(bg, x, yOffset, scaledWidth, scaledHeight);
+  for (let x = -cameraX % bg.width; x < CANVAS_WIDTH; x += bg.width) {
+    ctx.drawImage(bg, x, yOffset, bg.width, 400);
+    const scaledHeight = BASE_HEIGHT_HALF * SCALE;
+    const scaledWidth = bg.width * SCALE;
+    for (let x = (-cameraX * SCALE) % scaledWidth; x < CANVAS_WIDTH; x += scaledWidth) {
+      ctx.drawImage(bg, x, yOffset, scaledWidth, scaledHeight);
+    }
   }
 }
 
+function drawObstacle(obs, yOffset, cameraX) {
+  const img = assets.bata;
+  if (!img) return;
+
+  const width = obs.width * SCALE;
+  const height = obs.height * SCALE;
+
+  // Posisi di layar dihitung relatif terhadap kamera pemain ini
+  const screenX = (obs.x - cameraX) * SCALE;
+
+  // obs.y adalah posisi kaki obstacle (dari bawah), jadi kita sesuaikan
+  const screenY = yOffset + (BASE_HEIGHT_HALF - obs.height) * SCALE;
+
+  ctx.drawImage(img, screenX, screenY, width, height);
+}
 let animCounter = 0; // hitungan frame global
 
 let leftPressed = false;
@@ -391,10 +412,14 @@ function animate() {
     const offsetY = (id === playerId) ? 0 : CANVAS_HEIGHT / 2;
 
     drawBackground(p.cameraX, offsetY);
+
     drawPlayerName(p, offsetY);
     drawLives(p, offsetY);
     drawStage(p, offsetY);
-    drawPlayer(p, offsetY);
+
+    obstacles.forEach(obs => drawObstacle(obs, offsetY, p.cameraX));
+
+    drawPlayer(p, offsetY, p.cameraX);
   }
 
   // Garis pembatas tengah

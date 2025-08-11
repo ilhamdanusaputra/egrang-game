@@ -13,7 +13,7 @@ let players = {};
 let slots = [null, null]; // slot[0] = player atas, slot[1] = player bawah
 
 // Konstanta permainan
-const GRAVITY = 1;       // Tarikan ke bawah
+const GRAVITY = 0.5;       // Tarikan ke bawah
 const JUMP_FORCE = -10;  // Kecepatan awal saat lompat
 const GROUND_Y = 300;    // Posisi tanah
 
@@ -26,10 +26,32 @@ const NORMAL_SPEED = 3;
 const STAGE_DISTANCE = 5000;
 const MAX_STAGE = 3;
 
+const OBSTACLE_WIDTH = 20;
+const OBSTACLE_HEIGHT = 20;
+const OBSTACLE_AREA_LENGTH = 15000;
+
+let obstacles = [];
+
+// Buat obstacle acak sepanjang 15000 px
+function generateObstacles() {
+  obstacles = [];
+  // Misal buat 30 obstacle acak sepanjang 15000 px
+  const count = 30;
+
+  for (let i = 0; i < count; i++) {
+    const x = Math.random() * (OBSTACLE_AREA_LENGTH - OBSTACLE_WIDTH);
+    const y = GROUND_Y; // posisi kaki obstacle
+    obstacles.push({ x, y, width: OBSTACLE_WIDTH, height: OBSTACLE_HEIGHT });
+  }
+}
+
+
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
   socket.on("join", ({ name }) => {
+    generateObstacles();
+
     // Cari slot kosong
     let index = slots.findIndex(s => s === null);
     if (index === -1) index = 0; // fallback kalau penuh
@@ -59,8 +81,9 @@ io.on("connection", (socket) => {
     };
     slots[index] = socket.id;
 
-    socket.emit("init", { id: socket.id, players });
-    io.emit("update", { players });
+    // Kirim data awal termasuk obstacle ke client
+    socket.emit("init", { id: socket.id, players, obstacles });
+    io.emit("update", { players, obstacles });
   });
 
   socket.on("keydown", (key) => {
@@ -242,6 +265,28 @@ setInterval(() => {
       }, 3000);
     }
 
+    // Cek collision pemain dengan obstacle
+    const playerWidth = 50;
+    const playerHeight = 100;
+
+    obstacles.forEach((obs, idx) => {
+      if (!p.hasLost && !p.hasWon) {
+        const collision =
+          p.x < obs.x + obs.width &&
+          p.x + playerWidth > obs.x &&
+          p.y - playerHeight < obs.y &&
+          p.y > obs.y - obs.height;
+
+        if (collision) {
+          p.lives = Math.max(0, p.lives - 1);
+          console.log(`${p.name} kena obstacle, sisa nyawa: ${p.lives}`);
+
+          // Hapus obstacle supaya tidak kena berulang kali
+          obstacles.splice(idx, 1);
+        }
+      }
+    });
+
     // Update posisi horizontal
     p.x += p.vx;
     if (p.x < 0) p.x = 0;
@@ -272,7 +317,7 @@ setInterval(() => {
     if (p.cameraX < 0) p.cameraX = 0;
   }
 
-  io.emit("update", { players });
+  io.emit("update", { players, obstacles });
 }, TICK_MS);
 
 // Tambahkan fungsi reset game
