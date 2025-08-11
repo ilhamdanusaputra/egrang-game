@@ -277,7 +277,7 @@ setInterval(() => {
     }
 
     // Cek kalah (lives <= 1)
-    if (p.lives <= 1 && !p.hasLost) {
+    if (p.lives <= 0 && !p.hasLost) {
       p.hasLost = true;
       console.log(`${p.name} kalah!`);
       io.emit("playerLost", { id: p.id, name: p.name });
