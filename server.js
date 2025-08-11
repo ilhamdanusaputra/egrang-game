@@ -32,19 +32,36 @@ const OBSTACLE_AREA_LENGTH = 15000;
 
 let obstacles = [];
 
-// Buat obstacle acak sepanjang 15000 px
+// Buat obstacle acak sepanjang 15000 px dengan jarak minimal 300px
 function generateObstacles() {
   obstacles = [];
-  // Misal buat 30 obstacle acak sepanjang 15000 px
   const count = 30;
+  const minGap = 300; // jarak minimal antar obstacle
 
   for (let i = 0; i < count; i++) {
-    const x = Math.random() * (OBSTACLE_AREA_LENGTH - OBSTACLE_WIDTH);
-    const y = GROUND_Y; // posisi kaki obstacle
+    let x;
+    let valid;
+
+    do {
+      valid = true;
+      x = Math.random() * (OBSTACLE_AREA_LENGTH - OBSTACLE_WIDTH);
+
+      // Cek jarak terhadap semua obstacle yang sudah ada
+      for (let obs of obstacles) {
+        if (Math.abs(x - obs.x) < minGap) {
+          valid = false;
+          break;
+        }
+      }
+    } while (!valid);
+
+    const y = GROUND_Y;
     obstacles.push({ x, y, width: OBSTACLE_WIDTH, height: OBSTACLE_HEIGHT });
   }
-}
 
+  // Optional: urutkan dari kiri ke kanan biar rapi
+  obstacles.sort((a, b) => a.x - b.x);
+}
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
