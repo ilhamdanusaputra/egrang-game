@@ -148,6 +148,7 @@ document.getElementById("startBtn").onclick = async () => {
   name = document.getElementById("nameInput").value || "Player";
   localStorage.setItem("playerName", name);
   document.getElementById("menu").style.display = "none";
+  document.getElementById("menuContainer").style.display = "none";
 
   // Tampilkan semua tombol kontrol
   controls.forEach(id => {

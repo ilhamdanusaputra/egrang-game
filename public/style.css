@@ -4,19 +4,55 @@ body {
   overflow: hidden;
   font-family: sans-serif;
   color: white;
+}
+
+.center-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7); /* latar semi-transparan */
+  padding: 20px 40px;
+  border-radius: 10px;
   text-align: center;
 }
+
 canvas {
   display: block;
   margin: 0 auto;
   background-color: #000;
 }
-#menu {
-  position: absolute;
-  top: 20px;
-  width: 100%;
+#menu h2 {
+  margin: 0 0 10px 0;
+  font-size: 22px;
+  font-weight: bold;
 }
-#menu input, #menu button {
+
+#menu h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: normal;
+}
+
+#menu input,
+#menu button {
   padding: 10px;
   font-size: 16px;
+  margin: 5px;
+  border-radius: 6px;
+  border: none;
+}
+
+#menu input {
+  border: 1px solid #ccc;
+}
+
+#menu button {
+  background-color: #ff7a18;
+  color: white;
+  cursor: pointer;
+}
+
+#menu button:hover {
+  background-color: #e06210;
 }
