@@ -23,7 +23,7 @@ const BOOST_RECHARGE_MS = 7000; // recharge to full in 1 detik (ms)
 const BOOST_SPEED = 6;
 const NORMAL_SPEED = 3;
 
-const STAGE_DISTANCE = 500;
+const STAGE_DISTANCE = 5000;
 const MAX_STAGE = 3;
 
 io.on("connection", (socket) => {
