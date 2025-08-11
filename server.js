@@ -20,14 +20,14 @@ const GROUND_Y = 300;    // Posisi tanah
 // BOOST
 const BOOST_MAX_MS = 5000;    // 5 detik total (ms)
 const BOOST_RECHARGE_MS = 12000; // recharge to full in 12 detik (ms)
-const BOOST_SPEED = 6;
-const NORMAL_SPEED = 3;
+const BOOST_SPEED = 9;
+const NORMAL_SPEED = 5;
 
 const STAGE_DISTANCE = 5000;
 const MAX_STAGE = 3;
 
-const OBSTACLE_WIDTH = 20;
-const OBSTACLE_HEIGHT = 20;
+const OBSTACLE_WIDTH = 50;
+const OBSTACLE_HEIGHT = 50;
 const OBSTACLE_AREA_LENGTH = 15000;
 
 let obstacles = [];
